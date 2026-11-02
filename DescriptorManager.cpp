@@ -5,11 +5,11 @@ Engine::DescriptorManager::getPipelineLayout() const {
   return pipelineLayout;
 }
 
-void Engine::DescriptorManager::init(Engine::Device &device,
-                                     Engine::DescriptorLayout &descriptorLayout,
-                                     Engine::Buffer &buffer) {
+void Engine::DescriptorManager::init(
+    Engine::Device &device, Engine::DescriptorLayout &descriptorLayout,
+    std::vector<Engine::Buffer> &uniformBuffer) {
   createDescriptorPool(device);
-  createDescriptorSets(device, descriptorLayout, buffer);
+  createDescriptorSets(device, descriptorLayout, uniformBuffer);
 }
 
 void Engine::DescriptorManager::createDescriptorPool(Engine::Device &device) {
@@ -25,7 +25,7 @@ void Engine::DescriptorManager::createDescriptorPool(Engine::Device &device) {
 
 void Engine::DescriptorManager::createDescriptorSets(
     Engine::Device &device, Engine::DescriptorLayout &descriptorLayout,
-    Engine::Buffer &buffer) {
+    std::vector<Engine::Buffer> &uniformBuffer) {
   std::vector<vk::DescriptorSetLayout> layouts(
       MAX_FRAMES_IN_FLIGHT, *descriptorLayout.getDescriptorSetLayout());
   vk::DescriptorSetAllocateInfo allocInfo{
@@ -37,7 +37,7 @@ void Engine::DescriptorManager::createDescriptorSets(
 
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
     vk::DescriptorBufferInfo bufferInfo{
-        .buffer = buffer.getUniformBuffers()[i],
+        .buffer = uniformBuffer[i].getBuffer(),
         .offset = 0,
         .range = sizeof(Engine::Mesh::UniformBufferObject)};
     vk::WriteDescriptorSet descriptorWrite{

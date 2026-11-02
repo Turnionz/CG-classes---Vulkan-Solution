@@ -8,7 +8,7 @@ class DescriptorManager {
 public:
   DescriptorManager() = default;
   void init(Engine::Device &device, Engine::DescriptorLayout &descriptorLayout,
-            Engine::Buffer &buffer);
+            std::vector<Engine::Buffer> &uniformBuffer);
 
   [[nodiscard]] const vk::raii::PipelineLayout &getPipelineLayout() const;
 
@@ -18,7 +18,7 @@ private:
   void createDescriptorPool(Engine::Device &device);
   void createDescriptorSets(Engine::Device &device,
                             Engine::DescriptorLayout &descriptorLayout,
-                            Engine::Buffer &buffer);
+                            std::vector<Engine::Buffer> &uniformBuffer);
 };
 } // namespace Engine
 

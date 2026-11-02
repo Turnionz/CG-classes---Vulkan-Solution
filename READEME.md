@@ -4,9 +4,10 @@
 - VulkanSDK
 - GLFW
 - GLM
+- stb
 
 Also requires C++ 23
 
 To create he build folder use the following command
----
+=======
 cmake -B build -G Ninja -S . -DCMAKE_TOOLCHAIN_FILE={path/to/glfw/installation} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON

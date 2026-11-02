@@ -11,34 +11,29 @@
 namespace Engine {
 class Buffer {
 public:
-  Buffer() = default;
-  void init(Engine::Pipeline &pipeline,
-            Engine::DescriptorLayout &descriptorLayout,
-            Engine::Swapchain &swapchain, Engine::Device &device);
-  void initCommandBuffers();
-  [[nodiscard]] const std::vector<vk::raii::Buffer> &getUniformBuffers() const;
-  [[nodiscard]] const std::vector<vk::raii::CommandBuffer> &
-  getCommandBuffers() const;
-  void updateUniformBuffer(uint32_t currentImage);
-  void recordCommandBuffer(uint32_t imageIndex);
-  const uint32_t getFrameIndex();
-  void setFrameIndex(uint32_t index);
+  Buffer(Engine::Device &device, vk::raii::CommandPool &commandPool,
+         vk::DeviceSize size, vk::BufferUsageFlags usage,
+         vk::MemoryPropertyFlags properties);
+
+  void map();
+  void unmap();
+  void writeToBuffer(const void *data, size_t size);
+  void copyBuffer(const vk::raii::Buffer &srcBuffer,
+                  vk::raii::Buffer &dstBuffer, vk::DeviceSize size);
+  // Copy to this buffer
+  void copyBuffer(const vk::raii::Buffer &srcBuffer, vk::DeviceSize size);
+
+  [[nodiscard]] const vk::raii::Buffer &getBuffer() const;
 
 private:
   uint32_t frameIndex = 0;
-  vk::raii::Buffer vertexBuffer = nullptr;
-  vk::raii::DeviceMemory vertexBufferMemory = nullptr;
-  vk::raii::Buffer indexBuffer = nullptr;
-  vk::raii::DeviceMemory indexBufferMemory = nullptr;
-  vk::raii::CommandPool commandPool = nullptr;
-  Engine::Pipeline *pPipeline;
-  Engine::DescriptorLayout *pDescriptorLayout;
-  Engine::Swapchain *pSwapChain;
-  Engine::Device *pDeivce;
-  std::vector<vk::raii::CommandBuffer> commandBuffers;
-  std::vector<vk::raii::Buffer> uniformBuffers;
-  std::vector<void *> uniformBuffersMapped;
-  std::vector<vk::raii::DeviceMemory> uniformBuffersMemory;
+
+  vk::raii::Buffer buffer = nullptr;
+  vk::raii::DeviceMemory bufferMemory = nullptr;
+  void *bufferMapped = nullptr;
+  vk::DeviceSize bufferSize;
+  vk::raii::CommandPool *pCommandPool;
+  Engine::Device *pDevice;
 
   void createCommandPool();
   void createVertexBuffer();
@@ -49,8 +44,7 @@ private:
                vk::MemoryPropertyFlags properties);
   uint32_t findMemoryType(uint32_t typeFilter,
                           vk::MemoryPropertyFlags properties);
-  void copyBuffer(vk::raii::Buffer &srcBuffer, vk::raii::Buffer &dstBuffer,
-                  vk::DeviceSize size);
+
   void createCommandBuffers();
   void transition_image_layout(uint32_t imageIndex, vk::ImageLayout old_layout,
                                vk::ImageLayout new_layout,

@@ -1,7 +1,7 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
-#include "Buffer.hpp"
+#include "CommandBuffer.hpp"
 #include "DescriptorLayout.hpp"
 #include "DescriptorManager.hpp"
 #include "Device.hpp"
@@ -11,6 +11,8 @@
 #include "Swapchain.hpp"
 #include "SyncObjects.hpp"
 #include "Window.hpp"
+#include <numbers>
+#include <optional>
 
 namespace Engine {
 class Application {
@@ -25,9 +27,21 @@ private:
   Engine::Swapchain swapchain;
   Engine::DescriptorLayout descriptorLayout;
   Engine::Pipeline pipeline;
-  Engine::Buffer buffer;
+
+  vk::raii::CommandPool commandPool = nullptr;
+
+  std::vector<Engine::Buffer> vertexBuffer;
+  std::optional<Engine::Buffer> indexBuffer;
+  std::vector<Engine::Buffer> uniformBuffer;
+  std::optional<Engine::CommandBuffer> commandBuffer;
+
   Engine::DescriptorManager descriptor;
   Engine::SyncObejcst syncObjects;
+
+  void createObject();
+
+  void updateUniformBuffer(uint32_t currentImage);
+  void updateVertexBuffer(uint32_t currentImage);
 
   void drawFrame();
   void mainLoop();
