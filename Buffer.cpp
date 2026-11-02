@@ -8,8 +8,8 @@ Engine::Buffer::Buffer(Engine::Device &device,
                        vk::raii::CommandPool &commandPool, vk::DeviceSize size,
                        vk::BufferUsageFlags usage,
                        vk::MemoryPropertyFlags properties) {
-  pDevice = &device;
-  pCommandPool = &commandPool;
+  this->pDevice = &device;
+  this->pCommandPool = &commandPool;
 
   // Tie the bufer and bufferMemory to the class at creation
   std::tie(buffer, bufferMemory) = createBuffer(size, usage, properties);
@@ -55,59 +55,10 @@ Engine::Buffer::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
   return {std::move(createBuf), std::move(createBufferMemory)};
 };
 
-uint32_t Engine::Buffer::findMemoryType(uint32_t typeFilter,
-                                        vk::MemoryPropertyFlags properties) {
-  vk::PhysicalDeviceMemoryProperties memProperties =
-      pDevice->getPhysicalDevice().getMemoryProperties();
-
-  for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-    if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags &
-                                    properties) == properties) {
-      return i;
-    }
-  }
-
-  throw std::runtime_error("failed to find suitable memory type!");
+void Engine::Buffer::copyBuffer(const vk::raii::Buffer &srcBuffer,
+                                vk::DeviceSize size) {
+  vk::raii::CommandBuffer commandCopyBuffer = beginSingleTimeCommands();
+  commandCopyBuffer.copyBuffer(*srcBuffer, this->buffer,
+                               vk::BufferCopy{.size = size});
+  endSingleTimeCommands(std::move(commandCopyBuffer));
 }
-
-void Engine::Buffer::copyBuffer(const vk::raii::Buffer &srcBuffer,
-                                vk::raii::Buffer &dstBuffer,
-                                vk::DeviceSize size) {
-  vk::CommandBufferAllocateInfo allocInfo{.commandPool = **pCommandPool,
-                                          .level =
-                                              vk::CommandBufferLevel::ePrimary,
-                                          .commandBufferCount = 1};
-  vk::raii::CommandBuffer commandCopyBuffer =
-      std::move(pDevice->getDevice().allocateCommandBuffers(allocInfo).front());
-  commandCopyBuffer.begin(
-      {.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit});
-  commandCopyBuffer.copyBuffer(*srcBuffer, *dstBuffer,
-                               vk::BufferCopy(0, 0, size));
-  commandCopyBuffer.end();
-
-  pDevice->getQueue().submit(
-      vk::SubmitInfo{.commandBufferCount = 1,
-                     .pCommandBuffers = &*commandCopyBuffer},
-      nullptr);
-  pDevice->getQueue().waitIdle();
-};
-
-void Engine::Buffer::copyBuffer(const vk::raii::Buffer &srcBuffer,
-                                vk::DeviceSize size) {
-  vk::CommandBufferAllocateInfo allocInfo{.commandPool = **pCommandPool,
-                                          .level =
-                                              vk::CommandBufferLevel::ePrimary,
-                                          .commandBufferCount = 1};
-  vk::raii::CommandBuffer commandCopyBuffer =
-      std::move(pDevice->getDevice().allocateCommandBuffers(allocInfo).front());
-  commandCopyBuffer.begin(
-      {.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit});
-  commandCopyBuffer.copyBuffer(*srcBuffer, *buffer, vk::BufferCopy(0, 0, size));
-  commandCopyBuffer.end();
-
-  pDevice->getQueue().submit(
-      vk::SubmitInfo{.commandBufferCount = 1,
-                     .pCommandBuffers = &*commandCopyBuffer},
-      nullptr);
-  pDevice->getQueue().waitIdle();
-};

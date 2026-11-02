@@ -28,7 +28,9 @@ void Engine::Application::run() {
       .queueFamilyIndex = device.getQueueIndex()};
   commandPool = vk::raii::CommandPool(device.getDevice(), poolInfo);
 
-  createObject();
+  // createObject();
+
+  texture.init(device, commandPool, swapchain);
 
   vk::DeviceSize vertexBufferSize = sizeof(vertices[0]) * vertices.size();
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -67,7 +69,7 @@ void Engine::Application::run() {
     uniformBuffer.back().map();
   }
 
-  descriptor.init(device, descriptorLayout, uniformBuffer);
+  descriptor.init(device, descriptorLayout, uniformBuffer, texture);
   commandBuffer.emplace(pipeline, descriptorLayout, swapchain, device,
                         commandPool);
   syncObjects.init(swapchain, device);
@@ -108,7 +110,9 @@ void Engine::Application::drawFrame() {
                                       indexBuffer->getBuffer());
 
   updateUniformBuffer(frameIndex);
-  updateVertexBuffer(frameIndex);
+  vertexBuffer[frameIndex].writeToBuffer(vertices.data(),
+                                         sizeof(vertices[0]) * vertices.size());
+  // updateVertexBuffer(frameIndex);
 
   vk::PipelineStageFlags waitDestinationStageMask(
       vk::PipelineStageFlagBits::eColorAttachmentOutput);
@@ -145,7 +149,7 @@ void Engine::Application::drawFrame() {
   }
   commandBuffer->setFrameIndex((frameIndex + 1) % MAX_FRAMES_IN_FLIGHT);
 }
-
+/*
 void Engine::Application::createObject() {
   float h = 0.5f;
   glm::vec3 color = {1.0f, 0.0f, 0.0f};
@@ -164,7 +168,7 @@ void Engine::Application::createObject() {
   indicies.insert(indicies.end(),
                   {0, 1, 2, 2, 1, 3, 4, 5, 6, 6, 5, 7, 7, 1, 0, 0, 6, 7,
                    4, 6, 0, 0, 2, 4, 1, 7, 5, 5, 3, 1, 3, 5, 4, 4, 2, 3});
-}
+}*/
 
 void Engine::Application::updateUniformBuffer(uint32_t currentImage) {
   static auto startTime = std::chrono::high_resolution_clock::now();
@@ -176,7 +180,7 @@ void Engine::Application::updateUniformBuffer(uint32_t currentImage) {
 
   Engine::Mesh::UniformBufferObject ubo{};
   ubo.model = rotate(glm::mat4(3.0f), time * glm::radians(90.0f),
-                     glm::vec3(0.0f, 1.0f, 1.0f));
+                     glm::vec3(0.0f, 0.0f, 1.0f));
   ubo.view = lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f),
                     glm::vec3(0.0f, 0.0f, 1.0f));
   ubo.proj = glm::perspective(
@@ -186,7 +190,7 @@ void Engine::Application::updateUniformBuffer(uint32_t currentImage) {
       0.1f, 10.0f);
   uniformBuffer[currentImage].writeToBuffer(&ubo, sizeof(ubo));
 }
-
+/*
 void Engine::Application::updateVertexBuffer(uint32_t currentImage) {
   static float colorA = 0.0f;
   static float colorB = 0.0f;
@@ -211,7 +215,7 @@ void Engine::Application::updateVertexBuffer(uint32_t currentImage) {
   vertices[7].color = {colorB, colorC, colorA};
   vertexBuffer[currentImage].writeToBuffer(
       vertices.data(), sizeof(vertices[0]) * vertices.size());
-}
+}*/
 
 void Engine::Application::mainLoop() {
   while (!(glfwWindowShouldClose(window.getWindow()))) {

@@ -70,26 +70,25 @@ void Engine::Swapchain::createSwapChain() {
   swapChainImages = swapChain.getImages();
 }
 
+vk::raii::ImageView Engine::Swapchain::createImageView(vk::Image const &image,
+                                                       vk::Format format) {
+  vk::ImageViewCreateInfo viewInfo{
+      .image = image,
+      .viewType = vk::ImageViewType::e2D,
+      .format = format,
+      .subresourceRange = {.aspectMask = vk::ImageAspectFlagBits::eColor,
+                           .baseMipLevel = 0,
+                           .levelCount = 1,
+                           .baseArrayLayer = 0,
+                           .layerCount = 1}};
+  return vk::raii::ImageView(pDevice->getDevice(), viewInfo);
+}
+
 void Engine::Swapchain::createImageViews() {
   assert(swapChainImageViews.empty());
-
-  vk::ImageViewCreateInfo imageViewCreateInfo{
-      .viewType = vk::ImageViewType::e2D,
-      .format = swapChainSurfaceFormat.format,
-      .subresourceRange = {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1}};
-
-  imageViewCreateInfo.components = {
-      vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity,
-      vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity};
-
-  imageViewCreateInfo.subresourceRange = {.aspectMask =
-                                              vk::ImageAspectFlagBits::eColor,
-                                          .levelCount = 1,
-                                          .layerCount = 1};
-
   for (auto &image : swapChainImages) {
-    imageViewCreateInfo.image = image;
-    swapChainImageViews.emplace_back(pDevice->getDevice(), imageViewCreateInfo);
+    swapChainImageViews.emplace_back(
+        createImageView(image, swapChainSurfaceFormat.format));
   }
 }
 

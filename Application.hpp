@@ -10,6 +10,7 @@
 #include "Sufrace.hpp"
 #include "Swapchain.hpp"
 #include "SyncObjects.hpp"
+#include "Texture.hpp"
 #include "Window.hpp"
 #include <numbers>
 #include <optional>
@@ -30,6 +31,7 @@ private:
 
   vk::raii::CommandPool commandPool = nullptr;
 
+  Engine::Texture texture;
   std::vector<Engine::Buffer> vertexBuffer;
   std::optional<Engine::Buffer> indexBuffer;
   std::vector<Engine::Buffer> uniformBuffer;

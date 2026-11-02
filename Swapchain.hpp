@@ -34,6 +34,9 @@ private:
   void createImageViews();
   void cleanupSwapChain();
 
+  vk::raii::ImageView createImageView(vk::Image const &image,
+                                      vk::Format format);
+
   vk::SurfaceFormatKHR chooseSwapSurfaceFormat(
       const std::vector<vk::SurfaceFormatKHR> &availableFormats);
   vk::PresentModeKHR chooseSwapPresentMode(

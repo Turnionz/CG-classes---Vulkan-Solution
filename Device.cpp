@@ -61,6 +61,8 @@ bool Engine::Device::isDeviceSuitable(
       vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
 
   bool supportsRequiredFeatures =
+      features.template get<vk::PhysicalDeviceFeatures2>()
+          .features.samplerAnisotropy &&
       features.template get<vk::PhysicalDeviceVulkan11Features>()
           .shaderDrawParameters &&
       features.template get<vk::PhysicalDeviceVulkan13Features>()
