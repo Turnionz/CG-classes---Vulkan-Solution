@@ -67,6 +67,8 @@ bool Engine::Device::isDeviceSuitable(
           .shaderDrawParameters &&
       features.template get<vk::PhysicalDeviceVulkan13Features>()
           .dynamicRendering &&
+      features.template get<vk::PhysicalDeviceVulkan13Features>()
+          .synchronization2 &&
       features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>()
           .extendedDynamicState;
 
@@ -139,6 +141,6 @@ void Engine::Device::createLogicalDevice(Engine::Surface &surface) {
           static_cast<uint32_t>(requiredDeviceExtension.size()),
       .ppEnabledExtensionNames = requiredDeviceExtension.data()};
 
-  device = vk::raii::Device(physicalDevice, deviceCreateInfo);
-  queue = vk::raii::Queue(device, queueIndex, 0);
+  this->device = vk::raii::Device(physicalDevice, deviceCreateInfo);
+  this->queue = vk::raii::Queue(device, queueIndex, 0);
 }

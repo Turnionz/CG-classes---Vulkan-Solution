@@ -1,6 +1,7 @@
 #ifndef PIPELINE_H
 #define PIPELINE_H
 
+#include "DepthBuffer.hpp"
 #include "DescriptorLayout.hpp"
 #include "Device.hpp"
 #include "Mesh.hpp"
@@ -13,7 +14,7 @@ public:
   Pipeline() = default;
   void init(Engine::Device &device, Engine::Swapchain &swapchain,
             Engine::DescriptorLayout &descriptorLayout,
-            const std::string vertShaderPName,
+            Engine::DepthBuffer &depthBuffer, const std::string vertShaderPName,
             const std::string fragShaderPName,
             vk::PipelineRasterizationStateCreateInfo customRasterizer);
 
@@ -28,7 +29,8 @@ private:
 
   void createGraphicsPipeline(
       Engine::Swapchain &swapchain, Engine::DescriptorLayout &descriptorLayout,
-      const std::string vertShaderPName, const std::string fragShaderPName,
+      Engine::DepthBuffer &depthBuffer, const std::string vertShaderPName,
+      const std::string fragShaderPName,
       vk::PipelineRasterizationStateCreateInfo customRasterizer);
   std::vector<char> readFile(const std::string &filename);
   vk::raii::ShaderModule

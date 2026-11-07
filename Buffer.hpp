@@ -4,7 +4,6 @@
 #include "DescriptorLayout.hpp"
 #include "MemoryManager.hpp"
 #include "Mesh.hpp"
-#include "Pipeline.hpp"
 #include "Swapchain.hpp"
 #include <chrono>
 #include <glm/gtc/matrix_transform.hpp>

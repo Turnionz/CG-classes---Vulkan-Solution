@@ -1,4 +1,5 @@
 #include "Swapchain.hpp"
+#include "DepthBuffer.hpp"
 
 const vk::raii::SwapchainKHR &Engine::Swapchain::getSwapchain() const {
   return swapChain;
@@ -70,13 +71,14 @@ void Engine::Swapchain::createSwapChain() {
   swapChainImages = swapChain.getImages();
 }
 
-vk::raii::ImageView Engine::Swapchain::createImageView(vk::Image const &image,
-                                                       vk::Format format) {
+vk::raii::ImageView
+Engine::Swapchain::createImageView(vk::Image const &image, vk::Format format,
+                                   vk::ImageAspectFlags aspectFlags) {
   vk::ImageViewCreateInfo viewInfo{
       .image = image,
       .viewType = vk::ImageViewType::e2D,
       .format = format,
-      .subresourceRange = {.aspectMask = vk::ImageAspectFlagBits::eColor,
+      .subresourceRange = {.aspectMask = aspectFlags,
                            .baseMipLevel = 0,
                            .levelCount = 1,
                            .baseArrayLayer = 0,
@@ -87,8 +89,8 @@ vk::raii::ImageView Engine::Swapchain::createImageView(vk::Image const &image,
 void Engine::Swapchain::createImageViews() {
   assert(swapChainImageViews.empty());
   for (auto &image : swapChainImages) {
-    swapChainImageViews.emplace_back(
-        createImageView(image, swapChainSurfaceFormat.format));
+    swapChainImageViews.emplace_back(createImageView(
+        image, swapChainSurfaceFormat.format, vk::ImageAspectFlagBits::eColor));
   }
 }
 
@@ -110,6 +112,9 @@ void Engine::Swapchain::recreateSwapChain() {
   cleanupSwapChain();
   createSwapChain();
   createImageViews();
+  if (pDepthBuffer) {
+    pDepthBuffer->recreateDepthResource();
+  }
 }
 
 void Engine::Swapchain::cleanupSwapChain() {

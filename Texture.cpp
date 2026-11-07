@@ -63,16 +63,18 @@ void Engine::Texture::createTextureImage() {
 }
 
 void Engine::Texture::createTextureImageView() {
-  textureImageView = createImageView(*textureImage, vk::Format::eR8G8B8A8Srgb);
+  textureImageView = createImageView(*textureImage, vk::Format::eR8G8B8A8Srgb,
+                                     vk::ImageAspectFlagBits::eColor);
 }
 
-vk::raii::ImageView Engine::Texture::createImageView(vk::Image const &image,
-                                                     vk::Format format) {
+vk::raii::ImageView
+Engine::Texture::createImageView(vk::Image const &image, vk::Format format,
+                                 vk::ImageAspectFlags aspectFlags) {
   vk::ImageViewCreateInfo viewInfo{
       .image = image,
       .viewType = vk::ImageViewType::e2D,
       .format = format,
-      .subresourceRange = {.aspectMask = vk::ImageAspectFlagBits::eColor,
+      .subresourceRange = {.aspectMask = aspectFlags,
                            .baseMipLevel = 0,
                            .levelCount = 1,
                            .baseArrayLayer = 0,
@@ -112,7 +114,6 @@ Engine::Texture::createImage(uint32_t width, uint32_t height, vk::Format format,
                                 .tiling = tiling,
                                 .usage = usage,
                                 .sharingMode = vk::SharingMode::eExclusive};
-
   vk::raii::Image image = vk::raii::Image(pDevice->getDevice(), imageInfo);
 
   vk::MemoryRequirements memRequirements = image.getMemoryRequirements();

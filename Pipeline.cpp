@@ -3,12 +3,13 @@
 void Engine::Pipeline::init(
     Engine::Device &device, Engine::Swapchain &swapchain,
     Engine::DescriptorLayout &descriptorLayout,
-    const std::string vertShaderPName, const std::string fragShaderPName,
+    Engine::DepthBuffer &depthBuffer, const std::string vertShaderPName,
+    const std::string fragShaderPName,
     vk::PipelineRasterizationStateCreateInfo customRasterizer) {
   pDevice = &device;
 
-  createGraphicsPipeline(swapchain, descriptorLayout, vertShaderPName,
-                         fragShaderPName, customRasterizer);
+  createGraphicsPipeline(swapchain, descriptorLayout, depthBuffer,
+                         vertShaderPName, fragShaderPName, customRasterizer);
 }
 
 const vk::raii::PipelineLayout &Engine::Pipeline::getPipelineLayout() const {
@@ -21,7 +22,8 @@ const vk::raii::Pipeline &Engine::Pipeline::getGraphicsPipeline() const {
 
 void Engine::Pipeline::createGraphicsPipeline(
     Engine::Swapchain &swapchain, Engine::DescriptorLayout &descriptorLayout,
-    const std::string vertShaderPName, const std::string fragShaderPName,
+    Engine::DepthBuffer &depthBuffer, const std::string vertShaderPName,
+    const std::string fragShaderPName,
     vk::PipelineRasterizationStateCreateInfo customRasterizer) {
   vk::raii::ShaderModule shaderModule =
       createShaderModule(readFile("shaders/slang.spv"));
@@ -99,6 +101,16 @@ void Engine::Pipeline::createGraphicsPipeline(
   vk::PipelineRenderingCreateInfo pipelineRenderingCreateInfo{
       .colorAttachmentCount = 1, .pColorAttachmentFormats = &swapchainFormat};
 
+  // Create info for depth buffer
+  vk::PipelineDepthStencilStateCreateInfo depthStencil{
+      .depthTestEnable = vk::True,
+      .depthWriteEnable = vk::True,
+      .depthCompareOp = vk::CompareOp::eLess,
+      .depthBoundsTestEnable = vk::False,
+      .stencilTestEnable = vk::False};
+
+  vk::Format depthFormat = depthBuffer.findDepthFormat();
+
   vk::StructureChain<vk::GraphicsPipelineCreateInfo,
                      vk::PipelineRenderingCreateInfo>
       pipelineChainInfoCreate(
@@ -110,13 +122,15 @@ void Engine::Pipeline::createGraphicsPipeline(
                                          .pRasterizationState =
                                              &customRasterizer,
                                          .pMultisampleState = &multisampling,
+                                         .pDepthStencilState = &depthStencil,
                                          .pColorBlendState = &colorBlending,
                                          .pDynamicState = &dynamicState,
                                          .layout = pipelineLayout,
                                          .renderPass = nullptr},
-          vk::PipelineRenderingCreateInfo{.colorAttachmentCount = 1,
-                                          .pColorAttachmentFormats =
-                                              &swapchainFormat});
+          vk::PipelineRenderingCreateInfo{
+              .colorAttachmentCount = 1,
+              .pColorAttachmentFormats = &swapchainFormat,
+              .depthAttachmentFormat = depthFormat});
 
   graphicsPipeline = vk::raii::Pipeline(
       pDevice->getDevice(), nullptr,

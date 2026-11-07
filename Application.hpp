@@ -2,6 +2,7 @@
 #define APPLICATION_H
 
 #include "CommandBuffer.hpp"
+#include "DepthBuffer.hpp"
 #include "DescriptorLayout.hpp"
 #include "DescriptorManager.hpp"
 #include "Device.hpp"
@@ -30,6 +31,8 @@ private:
   Engine::Pipeline pipeline;
 
   vk::raii::CommandPool commandPool = nullptr;
+
+  Engine::DepthBuffer depthBuffer;
 
   Engine::Texture texture;
   std::vector<Engine::Buffer> vertexBuffer;

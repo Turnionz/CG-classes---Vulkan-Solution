@@ -2,12 +2,20 @@
 #define TEXTURE_H
 
 #include "Buffer.hpp"
+#include "MemoryManager.hpp"
+#include "Swapchain.hpp"
 
 namespace Engine {
 class Texture : public MemoryManager {
 public:
   void init(Engine::Device &device, vk::raii::CommandPool &commandPool,
             Engine::Swapchain &swapchain);
+  std::pair<vk::raii::Image, vk::raii::DeviceMemory>
+  createImage(uint32_t width, uint32_t height, vk::Format format,
+              vk::ImageTiling tiling, vk::ImageUsageFlags usage,
+              vk::MemoryPropertyFlags properties);
+  vk::raii::ImageView createImageView(vk::Image const &image, vk::Format format,
+                                      vk::ImageAspectFlags aspectFlags);
 
   [[nodiscard]] const vk::raii::Sampler &getTextureSampler() const;
   [[nodiscard]] const vk::raii::ImageView &getTextureImageView() const;
@@ -22,12 +30,7 @@ private:
   void createTextureImageView();
   void createTextureSampler();
   void createImageViews();
-  vk::raii::ImageView createImageView(vk::Image const &image,
-                                      vk::Format format);
-  std::pair<vk::raii::Image, vk::raii::DeviceMemory>
-  createImage(uint32_t width, uint32_t height, vk::Format format,
-              vk::ImageTiling tiling, vk::ImageUsageFlags usage,
-              vk::MemoryPropertyFlags properties);
+
   void transitionImageLayout(vk::raii::CommandBuffer &commandBuffer,
                              const vk::raii::Image &image,
                              vk::ImageLayout oldLayout,

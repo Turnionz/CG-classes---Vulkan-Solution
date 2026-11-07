@@ -6,6 +6,13 @@
 #include <vector>
 
 namespace Engine {
+
+// Forward declaration of DepthBuffer, we do it since ine recreateSwapChain we
+// need to recreateDepthResource from DepthBuffer, but DepthBuffer objects need
+// swapchain beforehand. So to avoid the closed dependency loop we use forward
+// declaration
+class DepthBuffer;
+
 class Swapchain {
 public:
   Swapchain() = default;
@@ -18,6 +25,7 @@ public:
   [[nodiscard]] const std::vector<vk::Image> &getSwapChainImages() const;
   [[nodiscard]] const vk::SurfaceFormatKHR &getSwapChainSurfaceFormat() const;
   void recreateSwapChain();
+  void setDepthBuffer(DepthBuffer *depthBuffer) { pDepthBuffer = depthBuffer; }
 
 private:
   vk::raii::SwapchainKHR swapChain = nullptr;
@@ -29,13 +37,14 @@ private:
   Engine::Device *pDevice = nullptr;
   Engine::Surface *pSurface = nullptr;
   Engine::Window *pWindow = nullptr;
+  DepthBuffer *pDepthBuffer = nullptr;
 
   void createSwapChain();
   void createImageViews();
   void cleanupSwapChain();
 
-  vk::raii::ImageView createImageView(vk::Image const &image,
-                                      vk::Format format);
+  vk::raii::ImageView createImageView(vk::Image const &image, vk::Format format,
+                                      vk::ImageAspectFlags aspectFlags);
 
   vk::SurfaceFormatKHR chooseSwapSurfaceFormat(
       const std::vector<vk::SurfaceFormatKHR> &availableFormats);

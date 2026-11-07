@@ -11,6 +11,10 @@ void Engine::Application::run() {
 
   descriptorLayout.init(device);
 
+  depthBuffer.init(swapchain, device);
+
+  swapchain.setDepthBuffer(&depthBuffer);
+
   vk::PipelineRasterizationStateCreateInfo rasterizer{
       .depthClampEnable = vk::False,
       .rasterizerDiscardEnable = vk::False,
@@ -20,8 +24,8 @@ void Engine::Application::run() {
       .depthBiasEnable = vk::False,
       .lineWidth = 1.0f};
 
-  pipeline.init(device, swapchain, descriptorLayout, "vertMain", "fragMain",
-                rasterizer);
+  pipeline.init(device, swapchain, descriptorLayout, depthBuffer, "vertMain",
+                "fragMain", rasterizer);
 
   vk::CommandPoolCreateInfo poolInfo{
       .flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
@@ -70,8 +74,8 @@ void Engine::Application::run() {
   }
 
   descriptor.init(device, descriptorLayout, uniformBuffer, texture);
-  commandBuffer.emplace(pipeline, descriptorLayout, swapchain, device,
-                        commandPool);
+  this->commandBuffer.emplace(pipeline, descriptorLayout, swapchain, device,
+                              commandPool);
   syncObjects.init(swapchain, device);
 
   mainLoop();
@@ -107,7 +111,7 @@ void Engine::Application::drawFrame() {
   commandBuffer->getCommandBuffers()[frameIndex].reset();
   commandBuffer->recordCommandBuffers(imageIndex,
                                       vertexBuffer[frameIndex].getBuffer(),
-                                      indexBuffer->getBuffer());
+                                      indexBuffer->getBuffer(), depthBuffer);
 
   updateUniformBuffer(frameIndex);
   vertexBuffer[frameIndex].writeToBuffer(vertices.data(),
