@@ -9,14 +9,14 @@ public:
   DescriptorManager() = default;
   void init(Engine::Device &device, Engine::DescriptorLayout &descriptorLayout,
             std::vector<Engine::Buffer> &uniformBuffer,
-            Engine::Texture &texture);
+            std::vector<Engine::Texture> &textures);
 
   [[nodiscard]] const vk::raii::PipelineLayout &getPipelineLayout() const;
 
 private:
   vk::raii::DescriptorPool descriptorPool = nullptr;
   vk::raii::PipelineLayout pipelineLayout = nullptr;
-  Engine::Texture *pTexture;
+  std::vector<Engine::Texture> *pTextures = nullptr;
   void createDescriptorPool(Engine::Device &device);
   void createDescriptorSets(Engine::Device &device,
                             Engine::DescriptorLayout &descriptorLayout,

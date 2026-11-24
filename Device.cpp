@@ -57,8 +57,19 @@ bool Engine::Device::isDeviceSuitable(
   // Check if physicalDevice supports required features
   auto features = physicalDevice.template getFeatures2<
       vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceVulkan11Features,
-      vk::PhysicalDeviceVulkan13Features,
+      vk::PhysicalDeviceVulkan12Features, vk::PhysicalDeviceVulkan13Features,
       vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
+
+  const auto &vulkan12Features =
+      features.template get<vk::PhysicalDeviceVulkan12Features>();
+
+  bool supportsDescriptorIndexing =
+      vulkan12Features.descriptorIndexing &&
+      vulkan12Features.shaderSampledImageArrayNonUniformIndexing &&
+      vulkan12Features.descriptorBindingSampledImageUpdateAfterBind &&
+      vulkan12Features.descriptorBindingPartiallyBound &&
+      vulkan12Features.descriptorBindingVariableDescriptorCount &&
+      vulkan12Features.runtimeDescriptorArray;
 
   bool supportsRequiredFeatures =
       features.template get<vk::PhysicalDeviceFeatures2>()
@@ -74,7 +85,8 @@ bool Engine::Device::isDeviceSuitable(
 
   // Return true if all criterias are satisfied
   return supportAllRequiredExtensions && supportsVulkan1_4 &&
-         supportsRequiredFeatures && supportGraphics;
+         supportsRequiredFeatures && supportGraphics &&
+         supportsDescriptorIndexing;
 }
 
 void Engine::Device::createLogicalDevice(Engine::Surface &surface) {
@@ -113,13 +125,20 @@ void Engine::Device::createLogicalDevice(Engine::Surface &surface) {
       queueFamilyProperties.begin(), graphicsQueueFamilyProperty));
 
   // Chain of feature structures
-  vk::StructureChain<vk::PhysicalDeviceFeatures2,
-                     vk::PhysicalDeviceVulkan11Features,
-                     vk::PhysicalDeviceVulkan13Features,
-                     vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
+  vk::StructureChain<
+      vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceVulkan11Features,
+      vk::PhysicalDeviceVulkan12Features, vk::PhysicalDeviceVulkan13Features,
+      vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
       featureChain = {
-          {}, // vk::PhysicalDeviceFeatures2 (empty for now)
+          {.features = {.samplerAnisotropy =
+                            true}},       // vk::PhysicalDeviceFeatures2
           {.shaderDrawParameters = true}, // Enable shader draw from Vulkan 1.1
+          {.descriptorIndexing = true,
+           .shaderSampledImageArrayNonUniformIndexing = true,
+           .descriptorBindingSampledImageUpdateAfterBind = true,
+           .descriptorBindingPartiallyBound = true,
+           .descriptorBindingVariableDescriptorCount = true,
+           .runtimeDescriptorArray = true}, // Descriptor indexing
           {.synchronization2 = true,
            .dynamicRendering =
                true}, // Enable dynamic rendering from Vulkan 1.3

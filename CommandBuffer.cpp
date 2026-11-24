@@ -33,7 +33,8 @@ void Engine::CommandBuffer::createCommandBuffers() {
 
 void Engine::CommandBuffer::recordCommandBuffers(
     uint32_t imageIndex, const vk::raii::Buffer &vertex,
-    const vk::raii::Buffer &index, Engine::DepthBuffer &depthBuffer) {
+    const vk::raii::Buffer &index, Engine::DepthBuffer &depthBuffer,
+    Mesh::MeshPushConstants pushConstant) {
   auto &commandBuffer = commandBuffers[frameIndex];
   commandBuffer.begin({});
 
@@ -104,6 +105,9 @@ void Engine::CommandBuffer::recordCommandBuffers(
   commandBuffer.bindDescriptorSets(
       vk::PipelineBindPoint::eGraphics, pPipeline->getPipelineLayout(), 0,
       *pDescriptorLayout->getDescriptorSets()[frameIndex], nullptr);
+  commandBuffer.pushConstants(pPipeline->getPipelineLayout(),
+                              vk::ShaderStageFlagBits::eVertex, 0,
+                              sizeof(pushConstant), &pushConstant);
   commandBuffer.drawIndexed(static_cast<uint32_t>(indicies.size()), 1, 0, 0, 0);
   commandBuffer.endRendering();
 

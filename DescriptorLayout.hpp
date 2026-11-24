@@ -3,6 +3,8 @@
 
 #include "Device.hpp"
 
+constexpr uint32_t MAX_TEXTURES = 64;
+
 namespace Engine {
 class DescriptorLayout {
 public:

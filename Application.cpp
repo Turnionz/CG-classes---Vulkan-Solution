@@ -33,8 +33,13 @@ void Engine::Application::run() {
   commandPool = vk::raii::CommandPool(device.getDevice(), poolInfo);
 
   // createObject();
-
-  texture.init(device, commandPool, swapchain);
+  textures.reserve(2);
+  textures.emplace_back();
+  textures.back().init(device, commandPool, swapchain,
+                       "textures/RGBAtriangle.png");
+  textures.emplace_back();
+  textures.back().init(device, commandPool, swapchain,
+                       "textures/CheckerPattern.bmp");
 
   vk::DeviceSize vertexBufferSize = sizeof(vertices[0]) * vertices.size();
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -73,7 +78,7 @@ void Engine::Application::run() {
     uniformBuffer.back().map();
   }
 
-  descriptor.init(device, descriptorLayout, uniformBuffer, texture);
+  descriptor.init(device, descriptorLayout, uniformBuffer, textures);
   this->commandBuffer.emplace(pipeline, descriptorLayout, swapchain, device,
                               commandPool);
   syncObjects.init(swapchain, device);
@@ -109,9 +114,23 @@ void Engine::Application::drawFrame() {
   device.getDevice().resetFences(*syncObjects.getInFlightFence()[frameIndex]);
 
   commandBuffer->getCommandBuffers()[frameIndex].reset();
-  commandBuffer->recordCommandBuffers(imageIndex,
-                                      vertexBuffer[frameIndex].getBuffer(),
-                                      indexBuffer->getBuffer(), depthBuffer);
+  static auto startTime = std::chrono::high_resolution_clock::now();
+
+  auto currentTime = std::chrono::high_resolution_clock::now();
+  float time = std::chrono::duration<float, std::chrono::seconds::period>(
+                   currentTime - startTime)
+                   .count();
+
+  // glm::mat4 objModel = rotate(glm::mat4(3.0f), time * glm::radians(90.0f),
+  //                         glm::vec3(0.0f, 0.0f, 1.0f));
+
+  glm::mat4 objModel = glm::mat4(1.0f);
+
+  Mesh::MeshPushConstants modelPush{.transform = objModel};
+
+  commandBuffer->recordCommandBuffers(
+      imageIndex, vertexBuffer[frameIndex].getBuffer(),
+      indexBuffer->getBuffer(), depthBuffer, modelPush);
 
   updateUniformBuffer(frameIndex);
   vertexBuffer[frameIndex].writeToBuffer(vertices.data(),
@@ -175,23 +194,16 @@ void Engine::Application::createObject() {
 }*/
 
 void Engine::Application::updateUniformBuffer(uint32_t currentImage) {
-  static auto startTime = std::chrono::high_resolution_clock::now();
-
-  auto currentTime = std::chrono::high_resolution_clock::now();
-  float time = std::chrono::duration<float, std::chrono::seconds::period>(
-                   currentTime - startTime)
-                   .count();
 
   Engine::Mesh::UniformBufferObject ubo{};
-  ubo.model = rotate(glm::mat4(3.0f), time * glm::radians(90.0f),
-                     glm::vec3(0.0f, 0.0f, 1.0f));
-  ubo.view = lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f),
-                    glm::vec3(0.0f, 0.0f, 1.0f));
+  ubo.view = lookAt(glm::vec3(0.0f, 0.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f),
+                    glm::vec3(0.0f, 1.0f, 0.0f));
   ubo.proj = glm::perspective(
       glm::radians(45.0f),
       static_cast<float>(swapchain.getSwapChainExtent().width) /
           static_cast<float>(swapchain.getSwapChainExtent().height),
       0.1f, 10.0f);
+
   uniformBuffer[currentImage].writeToBuffer(&ubo, sizeof(ubo));
 }
 /*

@@ -18,7 +18,8 @@ public:
   getCommandBuffers() const;
   void recordCommandBuffers(uint32_t imageIndex, const vk::raii::Buffer &vertex,
                             const vk::raii::Buffer &index,
-                            Engine::DepthBuffer &depthBuffer);
+                            Engine::DepthBuffer &depthBuffer,
+                            Mesh::MeshPushConstants pushConstant);
 
 private:
   uint32_t frameIndex = 0;

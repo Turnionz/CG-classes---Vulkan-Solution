@@ -73,14 +73,15 @@ void Engine::Swapchain::createSwapChain() {
 
 vk::raii::ImageView
 Engine::Swapchain::createImageView(vk::Image const &image, vk::Format format,
-                                   vk::ImageAspectFlags aspectFlags) {
+                                   vk::ImageAspectFlags aspectFlags,
+                                   uint32_t mipLevels) {
   vk::ImageViewCreateInfo viewInfo{
       .image = image,
       .viewType = vk::ImageViewType::e2D,
       .format = format,
       .subresourceRange = {.aspectMask = aspectFlags,
                            .baseMipLevel = 0,
-                           .levelCount = 1,
+                           .levelCount = mipLevels,
                            .baseArrayLayer = 0,
                            .layerCount = 1}};
   return vk::raii::ImageView(pDevice->getDevice(), viewInfo);
@@ -89,8 +90,9 @@ Engine::Swapchain::createImageView(vk::Image const &image, vk::Format format,
 void Engine::Swapchain::createImageViews() {
   assert(swapChainImageViews.empty());
   for (auto &image : swapChainImages) {
-    swapChainImageViews.emplace_back(createImageView(
-        image, swapChainSurfaceFormat.format, vk::ImageAspectFlagBits::eColor));
+    swapChainImageViews.emplace_back(
+        createImageView(image, swapChainSurfaceFormat.format,
+                        vk::ImageAspectFlagBits::eColor, 1));
   }
 }
 

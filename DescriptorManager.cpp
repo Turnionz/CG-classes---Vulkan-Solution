@@ -8,8 +8,8 @@ Engine::DescriptorManager::getPipelineLayout() const {
 void Engine::DescriptorManager::init(Engine::Device &device,
                                      Engine::DescriptorLayout &descriptorLayout,
                                      std::vector<Engine::Buffer> &uniformBuffer,
-                                     Engine::Texture &texture) {
-  pTexture = &texture;
+                                     std::vector<Engine::Texture> &textures) {
+  pTextures = &textures;
 
   createDescriptorPool(device);
   createDescriptorSets(device, descriptorLayout, uniformBuffer);
@@ -20,9 +20,10 @@ void Engine::DescriptorManager::createDescriptorPool(Engine::Device &device) {
       {{.type = vk::DescriptorType::eUniformBuffer,
         .descriptorCount = MAX_FRAMES_IN_FLIGHT},
        {.type = vk::DescriptorType::eCombinedImageSampler,
-        .descriptorCount = MAX_FRAMES_IN_FLIGHT}}};
+        .descriptorCount = MAX_FRAMES_IN_FLIGHT * MAX_TEXTURES}}};
   vk::DescriptorPoolCreateInfo poolInfo{
-      .flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
+      .flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet |
+               vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind,
       .maxSets = MAX_FRAMES_IN_FLIGHT,
       .poolSizeCount = static_cast<uint32_t>(poolSize.size()),
       .pPoolSizes = poolSize.data()};
@@ -41,15 +42,21 @@ void Engine::DescriptorManager::createDescriptorSets(
 
   descriptorLayout.allocateSets(device.getDevice(), allocInfo);
 
+  std::vector<vk::DescriptorImageInfo> imageInfos;
+  imageInfos.reserve(pTextures->size());
+  for (auto &tex : *pTextures) {
+    imageInfos.push_back(vk::DescriptorImageInfo{
+        .sampler = tex.getTextureSampler(),
+        .imageView = tex.getTextureImageView(),
+        .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal});
+  }
+
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
     vk::DescriptorBufferInfo bufferInfo{
         .buffer = uniformBuffer[i].getBuffer(),
         .offset = 0,
         .range = sizeof(Engine::Mesh::UniformBufferObject)};
-    vk::DescriptorImageInfo imageInfo{
-        .sampler = pTexture->getTextureSampler(),
-        .imageView = pTexture->getTextureImageView(),
-        .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal};
+
     std::array<vk::WriteDescriptorSet, 2> descriptorWrite{
         {{.dstSet = descriptorLayout.getDescriptorSets()[i],
           .dstBinding = 0,
@@ -60,9 +67,9 @@ void Engine::DescriptorManager::createDescriptorSets(
          {.dstSet = descriptorLayout.getDescriptorSets()[i],
           .dstBinding = 1,
           .dstArrayElement = 0,
-          .descriptorCount = 1,
+          .descriptorCount = static_cast<uint32_t>(imageInfos.size()),
           .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-          .pImageInfo = &imageInfo}}};
+          .pImageInfo = imageInfos.data()}}};
 
     device.getDevice().updateDescriptorSets(descriptorWrite, {});
   }

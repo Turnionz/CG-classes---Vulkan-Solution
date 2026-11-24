@@ -44,7 +44,8 @@ private:
   void cleanupSwapChain();
 
   vk::raii::ImageView createImageView(vk::Image const &image, vk::Format format,
-                                      vk::ImageAspectFlags aspectFlags);
+                                      vk::ImageAspectFlags aspectFlags,
+                                      uint32_t mipLevels);
 
   vk::SurfaceFormatKHR chooseSwapSurfaceFormat(
       const std::vector<vk::SurfaceFormatKHR> &availableFormats);

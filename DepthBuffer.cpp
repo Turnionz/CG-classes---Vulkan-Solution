@@ -13,15 +13,15 @@ void Engine::DepthBuffer::createDepthResource() {
   // Creating depth image
   std::tie(depthImage, depthImageMemory) =
       createImage(pSwapchain->getSwapChainExtent().width,
-                  pSwapchain->getSwapChainExtent().height, depthFormat,
+                  pSwapchain->getSwapChainExtent().height, 1, depthFormat,
                   vk::ImageTiling::eOptimal,
                   vk::ImageUsageFlagBits::eDepthStencilAttachment,
                   vk::MemoryPropertyFlagBits::eDeviceLocal);
 
   // Creating image view with aspect specifying that it is a depth image, not a
   // regular color image
-  depthImageView =
-      createImageView(depthImage, depthFormat, vk::ImageAspectFlagBits::eDepth);
+  depthImageView = createImageView(depthImage, depthFormat,
+                                   vk::ImageAspectFlagBits::eDepth, 1);
 }
 
 // Returns a pointer to depthImageView
@@ -56,8 +56,7 @@ vk::Format Engine::DepthBuffer::findSupportedFormat(
 }
 
 void Engine::DepthBuffer::cleanupDepthResource() {
-  // Order matters! If we don't follow the order we may get crashes and
-  // validation layer errors
+  // Order matters!
   depthImageView = nullptr;
   depthImage = nullptr;
   depthImageMemory = nullptr;

@@ -72,7 +72,12 @@ void Engine::Pipeline::createGraphicsPipeline(
       .sampleShadingEnable = vk::False};
 
   vk::PipelineColorBlendAttachmentState colorBlendAttachment{
-      .blendEnable = vk::False,
+      .blendEnable = vk::True,
+      .srcColorBlendFactor = vk::BlendFactor::eSrcAlpha,
+      .dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha,
+      .srcAlphaBlendFactor = vk::BlendFactor::eOne,
+      .dstAlphaBlendFactor = vk::BlendFactor::eZero,
+      .alphaBlendOp = vk::BlendOp::eAdd,
       .colorWriteMask =
           vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
           vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA};
@@ -83,10 +88,16 @@ void Engine::Pipeline::createGraphicsPipeline(
       .attachmentCount = 1,
       .pAttachments = &colorBlendAttachment};
 
+  vk::PushConstantRange pushConstant;
+  pushConstant.setStageFlags(vk::ShaderStageFlagBits::eVertex)
+      .setOffset(0)
+      .setSize(sizeof(Mesh::MeshPushConstants));
+
   vk::PipelineLayoutCreateInfo pipelineLayoutInfo{
       .setLayoutCount = 1,
       .pSetLayouts = &*descriptorLayout.getDescriptorSetLayout(),
-      .pushConstantRangeCount = 0};
+      .pushConstantRangeCount = 1,
+      .pPushConstantRanges = &pushConstant};
 
   pipelineLayout =
       vk::raii::PipelineLayout(pDevice->getDevice(), pipelineLayoutInfo);
@@ -104,7 +115,7 @@ void Engine::Pipeline::createGraphicsPipeline(
   // Create info for depth buffer
   vk::PipelineDepthStencilStateCreateInfo depthStencil{
       .depthTestEnable = vk::True,
-      .depthWriteEnable = vk::True,
+      .depthWriteEnable = vk::False,
       .depthCompareOp = vk::CompareOp::eLess,
       .depthBoundsTestEnable = vk::False,
       .stencilTestEnable = vk::False};

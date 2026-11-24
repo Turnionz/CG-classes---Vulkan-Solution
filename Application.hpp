@@ -34,7 +34,7 @@ private:
 
   Engine::DepthBuffer depthBuffer;
 
-  Engine::Texture texture;
+  std::vector<Engine::Texture> textures;
   std::vector<Engine::Buffer> vertexBuffer;
   std::optional<Engine::Buffer> indexBuffer;
   std::vector<Engine::Buffer> uniformBuffer;

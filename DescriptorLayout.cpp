@@ -23,14 +23,28 @@ void Engine::DescriptorLayout::createDescriptorSetLayout(
         .stageFlags = vk::ShaderStageFlagBits::eVertex},
        {.binding = 1,
         .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-        .descriptorCount = 1,
+        .descriptorCount = MAX_TEXTURES,
         .stageFlags = vk::ShaderStageFlagBits::eFragment}}};
 
-  vk::DescriptorSetLayoutCreateInfo layoutInfo{
-      .bindingCount = static_cast<uint32_t>(bindings.size()),
-      .pBindings = bindings.data()};
-  descriptorSetLayout =
-      vk::raii::DescriptorSetLayout(device.getDevice(), layoutInfo);
+  std::array<vk::DescriptorBindingFlags, 2> bindingFlags{
+      vk::DescriptorBindingFlags{},
+      vk::DescriptorBindingFlagBits::ePartiallyBound |
+          vk::DescriptorBindingFlagBits::eUpdateAfterBind};
+
+  vk::StructureChain<vk::DescriptorSetLayoutCreateInfo,
+                     vk::DescriptorSetLayoutBindingFlagsCreateInfo>
+      layoutChain{
+          vk::DescriptorSetLayoutCreateInfo{
+              .flags =
+                  vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool,
+              .bindingCount = static_cast<uint32_t>(bindings.size()),
+              .pBindings = bindings.data()},
+          vk::DescriptorSetLayoutBindingFlagsCreateInfo{
+              .bindingCount = static_cast<uint32_t>(bindingFlags.size()),
+              .pBindingFlags = bindingFlags.data()}};
+
+  descriptorSetLayout = vk::raii::DescriptorSetLayout(
+      device.getDevice(), layoutChain.get<vk::DescriptorSetLayoutCreateInfo>());
 }
 
 void Engine::DescriptorLayout::allocateSets(
